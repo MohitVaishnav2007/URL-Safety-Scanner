@@ -1,0 +1,91 @@
+🎯 Feature: URL Reputation Checker
+Goal: Input a URL → Check its safety using public threat intelligence APIs → Display result to the user
+
+🧱 SYSTEM OVERVIEW (Feature-centric)
+
+Component	Role
+Input Validation Layer	Validates and sanitizes the URL from the user.
+Reputation Engine	Sends request to threat intel APIs like VirusTotal / Google Safe.
+Decision Engine	Analyzes response and assigns a threat level (Safe, Suspicious, Bad)
+UI Layer (CLI/Web)	Displays final result in user-friendly format.
+Logging Module	Logs query data for user feedback or offline processing.
+🧰 REQUIRED LIBRARIES & TOOLS
+Language: Python
+Why: Easy to build, test, extend, and port later to web or extension.
+
+
+Purpose	Tool/Library
+Input/Output	argparse, input(), or Flask
+HTTP Requests	requests
+API Parsing	json
+URL Processing	validators, urllib.parse
+Logging	logging
+SOLID/Design	Modular Classes, Interfaces
+✅ WORKFLOW (Industry-Style, SOLID Principles)
+scss
+Copy
+Edit
+User Input
+   │
+   ▼
+[Validator Class] 🔒
+   │ Valid URL? ─────────────┐
+   ▼                         │
+[ReputationService Interface] (Abstract Class)
+   │                         │
+   ├─ [VirusTotalClient] ─────────────┐
+   │                                  ▼
+   └─ [GoogleSafeBrowsingClient] (Optional) 
+                                     │
+                            ▼
+                    [DecisionEngine] 🧠
+                            │
+                    Threat Score, Verdict
+                            ▼
+                        [Logger]
+                            ▼
+                        [UI Renderer] 🎯
+🧪 SOLID PRINCIPLES USED
+
+Principle	How It's Used
+S: SRP	Each class has one responsibility: validation, querying API, parsing, rendering.
+O: OCP	Easily add more API clients (GoogleSafeBrowsingClient, etc).
+L: LSP	Subclasses like VirusTotalClient behave as expected from ReputationService.
+I: ISP	Only relevant methods implemented in each module.
+D: DIP	Main app depends on abstraction ReputationService, not specific classes.
+🧠 PROMPT TO IMPLEMENT THIS (Step-by-Step)
+Here’s a coding prompt you can feed into a project or give to ChatGPT again to start building:
+
+Prompt:
+
+"Build a Python-based URL reputation checker that uses SOLID principles and system design best practices. The tool should:
+
+Accept a URL input from the user (either CLI or Flask API).
+
+Validate and sanitize the input using a Validator class.
+
+Use an abstract base class ReputationService that defines a check_url(url) method.
+
+Implement a concrete class VirusTotalClient that sends the URL to VirusTotal using their free API and parses the response.
+
+Optionally extend to other APIs like Google Safe Browsing.
+
+Use a DecisionEngine class to evaluate threat score and return a result: SAFE, SUSPICIOUS, or DANGEROUS.
+
+Log each check using Python’s logging module for offline analysis.
+
+Display the verdict in a CLI or Flask-based web UI.
+
+Use the following libraries:
+
+requests for API calls
+
+json for parsing
+
+validators for input sanitization
+
+abc for interface design (abstract base classes)
+
+logging for logs
+
+Follow SOLID principles, use modular files if possible, and use object-oriented programming best practices."

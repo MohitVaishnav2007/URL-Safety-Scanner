@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Safety Checker - Is This Website Safe?</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Main Card -->
+                <div class="card shadow mb-4 main-header-card fade-in">
+                    <div class="card-header">
+                        <h1 class="text-center my-2" style="font-size: 1.75rem;">
+                            <i class="bi bi-shield-check me-2"></i>Website Safety Checker
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <!-- Error Message if any -->
+                        {% if error %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ error }}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Simple Introduction -->
+                        <div class="mb-4">
+                            <h2 class="h4 text-center mb-3">Website Safety Check</h2>
+                            <p class="text-muted text-center">Enter a website address to check its safety status</p>
+                        </div>
+                        
+                        <!-- URL Input Form -->
+                        <form action="{{ url_for('check_url') }}" method="POST" id="url-form" class="slide-in-up">
+                            <div class="input-group mb-3 shadow">
+                                <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                <input 
+                                    type="text" 
+                                    class="form-control form-control-lg" 
+                                    name="url" 
+                                    id="url-input" 
+                                    placeholder="Enter website address (e.g., example.com)"
+                                    required
+                                    autofocus
+                                >
+                                <button class="btn btn-primary btn-lg pulse" type="submit" id="check-button">
+                                    <i class="bi bi-search me-1"></i> Check Safety
+                                </button>
+                            </div>
+                            <div class="form-text text-muted mb-4 text-center">
+                                Examples: google.com, facebook.com, or https://twitter.com
+                            </div>
+                        </form>
+                        
+                        <!-- Safety Indicators -->
+                        <div class="d-flex justify-content-between mt-4 mb-3">
+                            <div class="text-center stagger-item">
+                                <div class="status-badge safe mb-3">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Safe</span>
+                                </div>
+                                <p class="small text-muted">No threats detected</p>
+                            </div>
+                            <div class="text-center stagger-item">
+                                <div class="status-badge suspicious mb-3">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                    <span>Suspicious</span>
+                                </div>
+                                <p class="small text-muted">Potential risk</p>
+                            </div>
+                            <div class="text-center stagger-item">
+                                <div class="status-badge dangerous mb-3">
+                                    <i class="bi bi-shield-x"></i>
+                                    <span>Dangerous</span>
+                                </div>
+                                <p class="small text-muted">High risk detected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Checks -->
+                {% if recent_checks and recent_checks|length > 0 %}
+                <div class="card shadow mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Checks</h5>
+                        <span class="badge bg-secondary">Last {{ recent_checks|length }} checks</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Website</th>
+                                        <th class="text-center">Result</th>
+                                        <th class="text-center">Date</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for check in recent_checks %}
+                                    <tr>
+                                        <td class="text-truncate" style="max-width: 250px;">
+                                            <i class="bi bi-link-45deg me-1"></i>{{ check.url }}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if check.verdict == 'SAFE' %}
+                                                <span class="badge bg-success">SAFE</span>
+                                            {% elif check.verdict == 'SUSPICIOUS' %}
+                                                <span class="badge bg-warning">SUSPICIOUS</span>
+                                            {% elif check.verdict == 'DANGEROUS' %}
+                                                <span class="badge bg-danger">DANGEROUS</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ check.verdict }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center small">
+                                            <span class="text-muted">{{ check.check_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <form action="{{ url_for('check_url') }}" method="POST">
+                                                <input type="hidden" name="url" value="{{ check.url }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-arrow-repeat"></i> Check Again
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- How it Works Section -->
+                <div class="card shadow mb-4 slide-in-up" style="animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>How This Tool Works</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 stagger-item">
+                                <div class="card h-100 border-0 bg-dark bg-opacity-25 hover-lift">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="rounded-circle bg-primary p-3" style="background: var(--custom-gradient) !important;">
+                                                <i class="bi bi-1-circle-fill text-white"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5>Enter a Website</h5>
+                                                <p class="text-muted mb-0">Type the website address you want to check</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3 stagger-item">
+                                <div class="card h-100 border-0 bg-dark bg-opacity-25 hover-lift">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="rounded-circle bg-primary p-3" style="background: var(--custom-gradient) !important;">
+                                                <i class="bi bi-2-circle-fill text-white"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5>Security Check</h5>
+                                                <p class="text-muted mb-0">We check against multiple security sources</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3 stagger-item">
+                                <div class="card h-100 border-0 bg-dark bg-opacity-25 hover-lift">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="rounded-circle bg-primary p-3" style="background: var(--custom-gradient) !important;">
+                                                <i class="bi bi-3-circle-fill text-white"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5>Analyze Results</h5>
+                                                <p class="text-muted mb-0">Our system evaluates all security findings</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3 stagger-item">
+                                <div class="card h-100 border-0 bg-dark bg-opacity-25 hover-lift">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="rounded-circle bg-primary p-3" style="background: var(--custom-gradient) !important;">
+                                                <i class="bi bi-4-circle-fill text-white"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5>Safety Verdict</h5>
+                                                <p class="text-muted mb-0">Get a clear safety rating with details</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark py-3 mt-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">
+                <i class="bi bi-shield me-1"></i> Website Safety Checker | Powered by VirusTotal API
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
